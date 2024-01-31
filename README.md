@@ -1,6 +1,8 @@
 # ft232r_prog
 
-The `ft232r_prog` (v1.25) program provides a Linux command-line interface for reconfiguring the FT232R chip, eliminating the need for FTDI's MProg/FTProg (MS-Windows) packages. 
+This project is a fork of [kiwitea/ft232r_prog](https://github.com/kiwitea/ft232r_prog)
+
+The `ft232r_prog` (v1.26) program provides a Linux command-line interface for reconfiguring the FT232R chip, eliminating the need for FTDI's MProg/FTProg (MS-Windows) packages. 
 
 This is copy of the code by Marc Lord, http://rtr.ca/ft232r/
 
@@ -22,7 +24,7 @@ make
 ```bash
 ❯ ./ft232r_prog --help
 
-ft232r_prog: version 1.25, by Mark Lord.
+ft232r_prog: version 1.26, by Mark Lord.
 
 Usage:  ft232r_prog [<arg> <val>]..
 
