@@ -28,7 +28,7 @@
 #include <ftdi.h>
 #include <inttypes.h>
 
-#define MYVERSION "1.25"
+#define MYVERSION "1.26"
 
 static struct ftdi_context ftdi;
 static int verbose = 0;
