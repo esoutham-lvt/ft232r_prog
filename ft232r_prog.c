@@ -28,48 +28,49 @@
 #include <ftdi.h>
 #include <inttypes.h>
 
-#define MYVERSION	"1.25"
+#define MYVERSION "1.25"
 
 static struct ftdi_context ftdi;
 static int verbose = 0;
 static const char *save_path = NULL, *restore_path = NULL;
 
-enum cbus_mode {
-	cbus_txden	=  0, 
-	cbus_pwren	=  1, 
-	cbus_rxled	=  2, 
-	cbus_txled	=  3, 
-	cbus_txrxled	=  4, 
-	cbus_sleep	=  5, 
-	cbus_clk48	=  6, 
-	cbus_clk24	=  7, 
-	cbus_clk12	=  8, 
-	cbus_clk6	=  9, 
-	cbus_io		= 10, 
-	cbus_wr		= 11,
-	cbus_rd		= 12,
-	cbus_rxf	= 13,
+enum cbus_mode
+{
+	cbus_txden = 0,
+	cbus_pwren = 1,
+	cbus_rxled = 2,
+	cbus_txled = 3,
+	cbus_txrxled = 4,
+	cbus_sleep = 5,
+	cbus_clk48 = 6,
+	cbus_clk24 = 7,
+	cbus_clk12 = 8,
+	cbus_clk6 = 9,
+	cbus_io = 10,
+	cbus_wr = 11,
+	cbus_rd = 12,
+	cbus_rxf = 13,
 };
 
 static const char *cbus_mode_strings[] = {
-	"TxDEN",
-	"PwrEn",
-	"RxLED",
-	"TxLED",
-	"TxRxLED",
-	"Sleep",
-	"Clk48",
-	"Clk24",
-	"Clk12",
-	"Clk6",
-	"IO",
-	"WR",
-	"RD",
-	"RxF",
-	NULL
-};
+		"TxDEN",
+		"PwrEn",
+		"RxLED",
+		"TxLED",
+		"TxRxLED",
+		"Sleep",
+		"Clk48",
+		"Clk24",
+		"Clk12",
+		"Clk6",
+		"IO",
+		"WR",
+		"RD",
+		"RxF",
+		NULL};
 
-enum arg_type {
+enum arg_type
+{
 	arg_help,
 	arg_dump,
 	arg_verbose,
@@ -103,122 +104,124 @@ enum arg_type {
 };
 
 static const char *arg_type_strings[] = {
-	"--help",
-	"--dump",
-	"--verbose",
-	"--save",
-	"--restore",
-	"--cbus0",
-	"--cbus1",
-	"--cbus2",
-	"--cbus3",
-	"--cbus4",
-	"--manufacturer",
-	"--product",
-	"--old-serial-number",
-	"--new-serial-number",
-	"--self-powered",
-	"--max-bus-power",
-	"--high-current-io",
-	"--suspend-pull-down",
-	"--old-vid",
-	"--old-pid",
-	"--new-vid",
-	"--new-pid",
-	"--invert_txd",
-	"--invert_rxd",
-	"--invert_rts",
-	"--invert_cts",
-	"--invert_dtr",
-	"--invert_dsr",
-	"--invert_dcd",
-	"--invert_ri",
-	NULL
-};
+		"--help",
+		"--dump",
+		"--verbose",
+		"--save",
+		"--restore",
+		"--cbus0",
+		"--cbus1",
+		"--cbus2",
+		"--cbus3",
+		"--cbus4",
+		"--manufacturer",
+		"--product",
+		"--old-serial-number",
+		"--new-serial-number",
+		"--self-powered",
+		"--max-bus-power",
+		"--high-current-io",
+		"--suspend-pull-down",
+		"--old-vid",
+		"--old-pid",
+		"--new-vid",
+		"--new-pid",
+		"--invert_txd",
+		"--invert_rxd",
+		"--invert_rts",
+		"--invert_cts",
+		"--invert_dtr",
+		"--invert_dsr",
+		"--invert_dcd",
+		"--invert_ri",
+		NULL};
 
 static const char *arg_type_help[] = {
-	"   # (show this help text)",
-	"   # (dump eeprom settings to stdout))",
-	"# (show debug info and raw eeprom contents)",
-	"   # (save original eeprom contents to file)",
-	"# (restore initial eeprom contents from file)",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"     <string>  # (new USB manufacturer string)",
-	"          <string>  # (new USB product name string)",
-	"<string>  # (current serial number of device to be reprogrammed)",
-	"<string>  # (new USB serial number string)",
-	"     [on|off]  # (self powered)",
-	"    <number>  # (max bus current in milli-amperes)",
-	"  [on|off]  # (enable high [6mA @ 5V] drive current on CBUS pins)",
-	"[on|off]  # (force I/O pins into logic low state on suspend)",
-	"  <number>  # (current vendor id of device to be reprogrammed, eg. 0x0403)",
-	"  <number>  # (current product id of device to be reprogrammed, eg. 0x6001)",
-	"  <number>  # (new/custom vendor id to be programmed)",
-	"  <number>  # (new/custom product id be programmed)",
-	" Inverts the current value of TXD",
-	" Inverts the current value of RXD",
-	" Inverts the current value of RTS",
-	" Inverts the current value of CTS",
-	" Inverts the current value of DTR",
-	" Inverts the current value of DSR",
-	" Inverts the current value of DCD",
-	"  Inverts the current value of RI",
+		"   # (show this help text)",
+		"   # (dump eeprom settings to stdout))",
+		"# (show debug info and raw eeprom contents)",
+		"   # (save original eeprom contents to file)",
+		"# (restore initial eeprom contents from file)",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"     <string>  # (new USB manufacturer string)",
+		"          <string>  # (new USB product name string)",
+		"<string>  # (current serial number of device to be reprogrammed)",
+		"<string>  # (new USB serial number string)",
+		"     [on|off]  # (self powered)",
+		"    <number>  # (max bus current in milli-amperes)",
+		"  [on|off]  # (enable high [6mA @ 5V] drive current on CBUS pins)",
+		"[on|off]  # (force I/O pins into logic low state on suspend)",
+		"  <number>  # (current vendor id of device to be reprogrammed, eg. 0x0403)",
+		"  <number>  # (current product id of device to be reprogrammed, eg. 0x6001)",
+		"  <number>  # (new/custom vendor id to be programmed)",
+		"  <number>  # (new/custom product id be programmed)",
+		" Inverts the current value of TXD",
+		" Inverts the current value of RXD",
+		" Inverts the current value of RTS",
+		" Inverts the current value of CTS",
+		" Inverts the current value of DTR",
+		" Inverts the current value of DSR",
+		" Inverts the current value of DCD",
+		"  Inverts the current value of RI",
 };
 
 static const char *bool_strings[] = {
-	"off",
-	"on",
-	"0",
-	"1",
-	"no",
-	"yes",
-	"disable",
-	"enable",
+		"off",
+		"on",
+		"0",
+		"1",
+		"no",
+		"yes",
+		"disable",
+		"enable",
 };
 
-struct eeprom_fields {
-	unsigned char		byte01;
-	unsigned char		high_current_io;	/* bool */
-	unsigned char		load_d2xx_driver;	/* bool */
-	unsigned char		txd_inverted;		/* bool */
-	unsigned char		rxd_inverted;		/* bool */
-	unsigned char		rts_inverted;		/* bool */
-	unsigned char		cts_inverted;		/* bool */
-	unsigned char		dtr_inverted;		/* bool */
-	unsigned char		dsr_inverted;		/* bool */
-	unsigned char		dcd_inverted;		/* bool */
-	unsigned char		ri_inverted;		/* bool */
-	unsigned char		pnp_enabled;		/* bool */
-	enum cbus_mode		cbus[5];
-	unsigned char		extras[112];		/* extra, undefined fields */
-	struct ftdi_eeprom	libftdi;		/* stuff known to libftdi */
-	unsigned char		BM_type_chip;		/* from libftdi-0.18, missing in 0.19 */
+struct eeprom_fields
+{
+	unsigned char byte01;
+	unsigned char high_current_io;	/* bool */
+	unsigned char load_d2xx_driver; /* bool */
+	unsigned char txd_inverted;			/* bool */
+	unsigned char rxd_inverted;			/* bool */
+	unsigned char rts_inverted;			/* bool */
+	unsigned char cts_inverted;			/* bool */
+	unsigned char dtr_inverted;			/* bool */
+	unsigned char dsr_inverted;			/* bool */
+	unsigned char dcd_inverted;			/* bool */
+	unsigned char ri_inverted;			/* bool */
+	unsigned char pnp_enabled;			/* bool */
+	enum cbus_mode cbus[5];
+	unsigned char extras[112];	/* extra, undefined fields */
+	struct ftdi_eeprom libftdi; /* stuff known to libftdi */
+	unsigned char BM_type_chip; /* from libftdi-0.18, missing in 0.19 */
 
 	/* These are not actually eeprom values; here for convenience */
-	uint16_t		old_vid;
-	uint16_t		old_pid;
-	const char		*old_serno;
-	uint16_t		new_vid;
-	uint16_t		new_pid;
+	uint16_t old_vid;
+	uint16_t old_pid;
+	const char *old_serno;
+	uint16_t new_vid;
+	uint16_t new_pid;
 };
 
-static void dumpmem (const char *msg, void *addr, int len)
+static void dumpmem(const char *msg, void *addr, int len)
 {
 	char *data = addr, hex[3 * 16 + 1], ascii[17];
 	uint32_t i, offset = 0;
 
 	if (msg)
 		printf("%s:\n", msg);
-	for (i = 0; i < len;) {
+	for (i = 0; i < len;)
+	{
 		uint32_t i16 = i % 16;
 		unsigned char c = data[i];
 		sprintf(hex + (3 * i16), " %02x", c);
 		ascii[i16] = (c < ' ' || c > '~') ? '.' : c;
-		if (++i == len || i16 == 15) {
+		if (++i == len || i16 == 15)
+		{
 			ascii[i16 + 1] = '\0';
 			for (; i16 != 15; ++i16)
 				strcat(hex, "   ");
@@ -228,120 +231,121 @@ static void dumpmem (const char *msg, void *addr, int len)
 	}
 }
 
-static uint16_t calc_crc (void *addr, int len)
+static uint16_t calc_crc(void *addr, int len)
 {
 	uint32_t i;
 	uint16_t crc = 0xaaaa;
 	unsigned char *d8 = addr;
 
-	for (i = 0; i < len - 2; i += 2) {
-		crc ^= d8[i] | (d8[i+1] << 8);
-		crc  = (crc << 1) | (crc >> 15);
+	for (i = 0; i < len - 2; i += 2)
+	{
+		crc ^= d8[i] | (d8[i + 1] << 8);
+		crc = (crc << 1) | (crc >> 15);
 	}
 	return crc;
 }
 
-static void do_deinit (void)
+static void do_deinit(void)
 {
 	ftdi_deinit(&ftdi);
 }
 
-static void do_close (void)
+static uint16_t verify_crc(void *addr, int len)
 {
-	ftdi_usb_close(&ftdi);
-}
+	uint16_t crc = calc_crc(addr, len);
+	unsigned char *d8 = addr;
+	uint16_t actual = d8[len - 2] | (d8[len - 1] << 8);
 
-static uint16_t verify_crc (void *addr, int len)
-{
-	uint16_t crc    = calc_crc(addr, len);
-	unsigned char *d8     = addr;
-	uint16_t actual = d8[len-2] | (d8[len-1] << 8);
-
-	if (crc != actual) {
+	if (crc != actual)
+	{
 		fprintf(stderr, "Bad CRC: crc=0x%04x, actual=0x%04x\n", crc, actual);
 		exit(EINVAL);
 	}
-	if (verbose) printf("CRC: Okay (0x%04x)\n", crc);
+	if (verbose)
+		printf("CRC: Okay (0x%04x)\n", crc);
 	return crc;
 }
 
-static uint16_t update_crc (void *addr, int len)
+static uint16_t update_crc(void *addr, int len)
 {
 	uint16_t crc = calc_crc(addr, len);
-	unsigned char *d8  = addr;
+	unsigned char *d8 = addr;
 
-	d8[len-2] = crc;
-	d8[len-1] = crc >> 8;
+	d8[len - 2] = crc;
+	d8[len - 1] = crc >> 8;
 	return crc;
 }
 
-static int match_arg (const char *arg, const char **possibles)
+static int match_arg(const char *arg, const char **possibles)
 {
 	int i;
 
-	for (i = 0; possibles[i]; ++i) {
+	for (i = 0; possibles[i]; ++i)
+	{
 		if (0 == strcasecmp(possibles[i], arg))
 			return i;
 	}
 	fprintf(stderr, "unrecognized arg: \"%s\"\n", arg);
 	exit(EINVAL);
-	return -1;  /* never reached */
+	return -1; /* never reached */
 }
 
-static unsigned long unsigned_val (const char *arg, unsigned long max)
+static unsigned long unsigned_val(const char *arg, unsigned long max)
 {
 	unsigned long val;
 
 	errno = 0;
 	val = strtoul(arg, NULL, 0);
-	if (errno || val > max) {
+	if (errno || val > max)
+	{
 		fprintf(stderr, "%s: bad value (max=0x%lx)\n", arg, max);
 		exit(EINVAL);
 	}
 	return val;
 }
 
-static void ee_dump (struct eeprom_fields *ee)
+static void ee_dump(struct eeprom_fields *ee)
 {
 	uint32_t c;
 
-	printf("       eeprom_size = %d\n",	ee->libftdi.size);
-	printf("         vendor_id = 0x%04x\n",	ee->libftdi.vendor_id);
-	printf("        product_id = 0x%04x\n",	ee->libftdi.product_id);
-	printf("      self_powered = %d\n",	ee->libftdi.self_powered);
-	printf("     remote_wakeup = %d\n",	ee->libftdi.remote_wakeup);
-	printf("suspend_pull_downs = %d\n",	ee->libftdi.suspend_pull_downs);
-	printf("     max_bus_power = %d mA\n",	2 * ee->libftdi.max_power);
-	printf("      manufacturer = %s\n",	ee->libftdi.manufacturer);
-	printf("           product = %s\n",	ee->libftdi.product);
-	printf("         serialnum = %s\n",	ee->libftdi.serial);
-	printf("   high_current_io = %u\n",	ee->high_current_io);
-	printf("  load_d2xx_driver = %u\n",	ee->load_d2xx_driver);
-	printf("      txd_inverted = %u\n",	ee->txd_inverted);
-	printf("      rxd_inverted = %u\n",	ee->rxd_inverted);
-	printf("      rts_inverted = %u\n",	ee->rts_inverted);
-	printf("      cts_inverted = %u\n",	ee->cts_inverted);
-	printf("      dtr_inverted = %u\n",	ee->dtr_inverted);
-	printf("      dsr_inverted = %u\n",	ee->dsr_inverted);
-	printf("      dcd_inverted = %u\n",	ee->dcd_inverted);
-	printf("       ri_inverted = %u\n",	ee->ri_inverted);
+	printf("       eeprom_size = %d\n", ee->libftdi.size);
+	printf("         vendor_id = 0x%04x\n", ee->libftdi.vendor_id);
+	printf("        product_id = 0x%04x\n", ee->libftdi.product_id);
+	printf("      self_powered = %d\n", ee->libftdi.self_powered);
+	printf("     remote_wakeup = %d\n", ee->libftdi.remote_wakeup);
+	printf("suspend_pull_downs = %d\n", ee->libftdi.suspend_pull_downs);
+	printf("     max_bus_power = %d mA\n", 2 * ee->libftdi.max_power);
+	printf("      manufacturer = %s\n", ee->libftdi.manufacturer);
+	printf("           product = %s\n", ee->libftdi.product);
+	printf("         serialnum = %s\n", ee->libftdi.serial);
+	printf("   high_current_io = %u\n", ee->high_current_io);
+	printf("  load_d2xx_driver = %u\n", ee->load_d2xx_driver);
+	printf("      txd_inverted = %u\n", ee->txd_inverted);
+	printf("      rxd_inverted = %u\n", ee->rxd_inverted);
+	printf("      rts_inverted = %u\n", ee->rts_inverted);
+	printf("      cts_inverted = %u\n", ee->cts_inverted);
+	printf("      dtr_inverted = %u\n", ee->dtr_inverted);
+	printf("      dsr_inverted = %u\n", ee->dsr_inverted);
+	printf("      dcd_inverted = %u\n", ee->dcd_inverted);
+	printf("       ri_inverted = %u\n", ee->ri_inverted);
 
 	for (c = 0; c < 5; ++c)
 		printf("           cbus[%u] = %s\n", c, cbus_mode_strings[ee->cbus[c]]);
 
-	if (verbose) {
+	if (verbose)
+	{
 		/* These fields are non-applicable for FT232R devices */
-		printf("       usb_version = %d\n",		ee->libftdi.usb_version);
-		printf("     use_serialnum = %d    (n/a)\n",	ee->libftdi.use_serial);
-		printf("change_usb_version = %d    (n/a)\n",	ee->libftdi.change_usb_version);
-		printf("       pnp_enabled = %u    (n/a)\n",	ee->pnp_enabled);
-		printf("      BM_type_chip = 0x%02x (n/a)\n",	ee->BM_type_chip);
-		printf(" in_is_isochronous = %d    (n/a)\n",	ee->libftdi.in_is_isochronous);
-		printf("out_is_isochronous = %d    (n/a)\n",	ee->libftdi.out_is_isochronous);
+		printf("       usb_version = %d\n", ee->libftdi.usb_version);
+		printf("     use_serialnum = %d    (n/a)\n", ee->libftdi.use_serial);
+		printf("change_usb_version = %d    (n/a)\n", ee->libftdi.change_usb_version);
+		printf("       pnp_enabled = %u    (n/a)\n", ee->pnp_enabled);
+		printf("      BM_type_chip = 0x%02x (n/a)\n", ee->BM_type_chip);
+		printf(" in_is_isochronous = %d    (n/a)\n", ee->libftdi.in_is_isochronous);
+		printf("out_is_isochronous = %d    (n/a)\n", ee->libftdi.out_is_isochronous);
 	}
 };
 
-static uint32_t calc_extras_offset (unsigned char *eeprom)
+static uint32_t calc_extras_offset(unsigned char *eeprom)
 {
 	uint32_t str1 = (eeprom[0x0e] & 0x7f) + eeprom[0x0f];
 	uint32_t str2 = (eeprom[0x10] & 0x7f) + eeprom[0x11];
@@ -355,35 +359,38 @@ static uint32_t calc_extras_offset (unsigned char *eeprom)
 	return offset;
 }
 
-static uint32_t encode_string (void *eeprom, int desc, int offset, char *s)
+static uint32_t encode_string(void *eeprom, int desc, int offset, char *s)
 {
 	unsigned char c, *u8 = eeprom, slen = (strlen(s) + 1) * 2;
 
 	if (!s || !*s)
 		return offset;
-	u8[desc + 0] = offset | 0x80;	/* offset of string */
-	u8[desc + 1] = slen;		/* length */
+	u8[desc + 0] = offset | 0x80; /* offset of string */
+	u8[desc + 1] = slen;					/* length */
 
-	u8[offset++] = slen;	/* length */
-	u8[offset++] = 0x03;	/* "type" == string */
-	while ((c = *s++)) {
+	u8[offset++] = slen; /* length */
+	u8[offset++] = 0x03; /* "type" == string */
+	while ((c = *s++))
+	{
 		u8[offset++] = c;
 		u8[offset++] = 0;
 	}
 	return offset;
 }
 
-static void ft232r_eprom_build (struct eeprom_fields *ee, unsigned char *eeprom)
+static void ft232r_eprom_build(struct eeprom_fields *ee, unsigned char *eeprom)
 {
 	uint32_t len = ee->libftdi.size;
 	int offset = 0x18;
 
 	memset(eeprom, 0, len);
-	if (strlen(ee->libftdi.serial) > 16) {
+	if (strlen(ee->libftdi.serial) > 16)
+	{
 		fprintf(stderr, "Serial number string exceeds limit of 16 chars, aborting.\n");
 		exit(EINVAL);
 	}
-	if ((strlen(ee->libftdi.manufacturer) + strlen(ee->libftdi.product) + strlen(ee->libftdi.serial)) > 46) {
+	if ((strlen(ee->libftdi.manufacturer) + strlen(ee->libftdi.product) + strlen(ee->libftdi.serial)) > 46)
+	{
 		fprintf(stderr, "Total string sizes exceed limit of 46 chars, aborting.\n");
 		exit(EINVAL);
 	}
@@ -419,18 +426,18 @@ static void ft232r_eprom_build (struct eeprom_fields *ee, unsigned char *eeprom)
  * There are some undefined "extra features" bytes after the strings.
  * So blindly preserve them from the original eeprom image.
  */
-static void ee_encode_extras (unsigned char *eeprom, int len, struct eeprom_fields *ee)
+static void ee_encode_extras(unsigned char *eeprom, int len, struct eeprom_fields *ee)
 {
 	uint32_t extras_offset = calc_extras_offset(eeprom);
 
 	memcpy(eeprom + extras_offset, ee->extras, len - extras_offset - 2);
 	if (ee->pnp_enabled)
-		eeprom[extras_offset + 2] |=  1;
+		eeprom[extras_offset + 2] |= 1;
 	else
 		eeprom[extras_offset + 2] &= ~1;
 }
 
-static uint16_t ee_encode (unsigned char *eeprom, int len, struct eeprom_fields *ee)
+static uint16_t ee_encode(unsigned char *eeprom, int len, struct eeprom_fields *ee)
 {
 	int ret;
 
@@ -438,19 +445,23 @@ static uint16_t ee_encode (unsigned char *eeprom, int len, struct eeprom_fields 
 	ee->libftdi.size = len;
 
 	if (ee->new_vid)
-		ee->libftdi.vendor_id  = ee->new_vid;
+		ee->libftdi.vendor_id = ee->new_vid;
 	if (ee->new_pid)
 		ee->libftdi.product_id = ee->new_pid;
 
 	/* Unfortunately, ftdi_eeprom_build() is buggy and puts things in the wrong places */
-	if (0) {
+	if (0)
+	{
 		ret = ftdi_eeprom_build(&ee->libftdi, eeprom);
-		if (ret < 0) {
+		if (ret < 0)
+		{
 			fprintf(stderr, "ftdi_eeprom_build() failed, ret=%d\n", ret);
 			exit(EINVAL);
 		}
 		printf("ftdi_eeprom_build() ret=%d\n", ret);
-	} else {
+	}
+	else
+	{
 		ft232r_eprom_build(ee, eeprom);
 	}
 	eeprom[1] = ee->byte01;
@@ -485,7 +496,7 @@ static uint16_t ee_encode (unsigned char *eeprom, int len, struct eeprom_fields 
  * There are some undefined "extra features" bytes after the strings.
  * So blindly preserve them from the original eeprom image.
  */
-static void ee_decode_extras (unsigned char *eeprom, int len, struct eeprom_fields *ee)
+static void ee_decode_extras(unsigned char *eeprom, int len, struct eeprom_fields *ee)
 {
 	uint32_t extras_offset = calc_extras_offset(eeprom);
 
@@ -493,7 +504,7 @@ static void ee_decode_extras (unsigned char *eeprom, int len, struct eeprom_fiel
 	ee->pnp_enabled = eeprom[extras_offset + 2] & 0x01;
 }
 
-static void ee_decode (unsigned char *eeprom, int len, struct eeprom_fields *ee)
+static void ee_decode(unsigned char *eeprom, int len, struct eeprom_fields *ee)
 {
 	memset(ee, 0, sizeof(*ee));
 	if (eeprom[0] & 0x04)
@@ -516,7 +527,7 @@ static void ee_decode (unsigned char *eeprom, int len, struct eeprom_fields *ee)
 	if (eeprom[0x0b] & 0x40)
 		ee->dcd_inverted = 1;
 	if (eeprom[0x0b] & 0x80)
-		ee->ri_inverted  = 1;
+		ee->ri_inverted = 1;
 	ee->cbus[0] = eeprom[0x14] & 0xf;
 	ee->cbus[1] = eeprom[0x14] >> 4;
 	ee->cbus[2] = eeprom[0x15] & 0xf;
@@ -525,37 +536,45 @@ static void ee_decode (unsigned char *eeprom, int len, struct eeprom_fields *ee)
 	ee_decode_extras(eeprom, len, ee);
 
 	/* Use libftdi to decode the remaining fields, which it knows about */
-	if (ftdi_eeprom_decode(&ee->libftdi, eeprom, len)) {
+	if (ftdi_eeprom_decode(&ee->libftdi, eeprom, len))
+	{
 		fprintf(stderr, "ftdi_eeprom_decode() failed\n");
 		exit(EINVAL);
 	}
-	ee->BM_type_chip = eeprom[0x07];	/* buggy ftdi_eeprom_decode() */
-	if (eeprom[0x0a] & 0x10)		/* more buggy ftdi_eeprom_decode() */
+	ee->BM_type_chip = eeprom[0x07]; /* buggy ftdi_eeprom_decode() */
+	if (eeprom[0x0a] & 0x10)				 /* more buggy ftdi_eeprom_decode() */
 		ee->libftdi.change_usb_version = 1;
 	else
 		ee->libftdi.change_usb_version = 0;
-	ee->libftdi.usb_version = (eeprom[0x0d] << 8) | eeprom[0x0c];;
+	ee->libftdi.usb_version = (eeprom[0x0d] << 8) | eeprom[0x0c];
+	;
 }
 
 static const char *myname;
 
-static void show_help (FILE *fp)
+static void show_help(FILE *fp)
 {
 	int i;
 
 	fprintf(fp, "\nUsage:  %s [<arg> <val>]..\n", myname);
 	fprintf(fp, "\nwhere <arg> must be any of:\n");
 
-	for (i = 0; arg_type_strings[i]; ++i) {
+	for (i = 0; arg_type_strings[i]; ++i)
+	{
 		const char *val = arg_type_help[i];
 		fprintf(fp, "    %s", arg_type_strings[i]);
-		if (val) {
-			if (*val) {
+		if (val)
+		{
+			if (*val)
+			{
 				fprintf(fp, "  %s", val);
-			} else {  /* cbus args */
+			}
+			else
+			{ /* cbus args */
 				int j;
 				fprintf(fp, "  [");
-				for (j = 0; cbus_mode_strings[j];) {
+				for (j = 0; cbus_mode_strings[j];)
+				{
 					fprintf(fp, "%s", cbus_mode_strings[j]);
 					if (cbus_mode_strings[++j])
 						fprintf(fp, "|");
@@ -568,23 +587,26 @@ static void show_help (FILE *fp)
 	fputc('\n', fp);
 }
 
-static uint16_t ee_read_and_verify (void *eeprom, int len)
+static uint16_t ee_read_and_verify(void *eeprom, int len)
 {
-	if (ftdi_read_eeprom(&ftdi, eeprom)) {
+	if (ftdi_read_eeprom(&ftdi, eeprom))
+	{
 		fprintf(stderr, "ftdi_read_eeprom() failed: %s\n", ftdi_get_error_string(&ftdi));
 		exit(EIO);
 	}
 	return verify_crc(eeprom, len);
 }
 
-static void process_args (int argc, char *argv[], struct eeprom_fields *ee)
+static void process_args(int argc, char *argv[], struct eeprom_fields *ee)
 {
 	int i;
 
-	for (i = 1; i < argc;) {
+	for (i = 1; i < argc;)
+	{
 		int arg;
 		arg = match_arg(argv[i++], arg_type_strings);
-		switch (arg) {
+		switch (arg)
+		{
 		case arg_help:
 			show_help(stdout);
 			exit(1);
@@ -618,11 +640,13 @@ static void process_args (int argc, char *argv[], struct eeprom_fields *ee)
 			ee->ri_inverted = !ee->ri_inverted;
 			continue;
 		}
-		if (i == argc) {
-			fprintf(stderr, "%s: missing %s value\n", argv[i-2], argv[i-1]);
+		if (i == argc)
+		{
+			fprintf(stderr, "%s: missing %s value\n", argv[i - 2], argv[i - 1]);
 			exit(EINVAL);
 		}
-		switch (arg) {
+		switch (arg)
+		{
 		case arg_save:
 			save_path = argv[i++];
 			break;
@@ -679,46 +703,52 @@ static void process_args (int argc, char *argv[], struct eeprom_fields *ee)
 	}
 }
 
-static void save_eeprom_to_file (const char *path, void *eeprom, int len)
+static void save_eeprom_to_file(const char *path, void *eeprom, int len)
 {
-	int count, fd = open(path, O_CREAT|O_WRONLY|O_TRUNC, 0644);
+	int count, fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
 
-	if (fd == -1) {
+	if (fd == -1)
+	{
 		int err = errno;
 		perror(path);
 		exit(err);
 	}
 	count = write(fd, eeprom, len);
-	if (count < 0) {
+	if (count < 0)
+	{
 		int err = errno;
 		perror(path);
 		exit(err);
 	}
 	close(fd);
-	if (count != len) {
+	if (count != len)
+	{
 		fprintf(stderr, "%s: wrong size, wrote %d/%d bytes\n", path, count, len);
 		exit(EINVAL);
 	}
 	printf("%s: wrote %d bytes\n", path, count);
 }
 
-static void restore_eeprom_from_file (const char *path, void *eeprom, int len, int max)
+static void restore_eeprom_from_file(const char *path, void *eeprom, int len, int max)
 {
 	int count, fd = open(path, O_RDONLY);
 
-	if (fd == -1) {
+	if (fd == -1)
+	{
 		int err = errno;
 		perror(path);
 		exit(err);
 	}
 	count = read(fd, eeprom, max);
-	if (count < 0) {
+	if (count < 0)
+	{
 		int err = errno;
 		perror(path);
 		exit(err);
 	}
 	close(fd);
-	if (count != len ) {
+	if (count != len)
+	{
 		fprintf(stderr, "%s: wrong size, read %d/%d bytes\n", path, count, len);
 		exit(EINVAL);
 	}
@@ -726,10 +756,71 @@ static void restore_eeprom_from_file (const char *path, void *eeprom, int len, i
 	verify_crc(eeprom, len);
 }
 
-int main (int argc, char *argv[])
+// Function to select and open an FTDI device by index
+int select_and_open_device_by_index(struct ftdi_context *ftdi, struct ftdi_device_list *devlist, int index)
 {
+	int i = 0;
+	struct ftdi_device_list *curdev = devlist;
+
+	// Iterate through the device list to find the selected device by index
+	while (curdev != NULL)
+	{
+		if (i == index)
+		{
+			// Found the selected device, try to open it
+			if (ftdi_usb_open_dev(ftdi, curdev->dev) < 0)
+			{
+				fprintf(stderr, "Failed to open selected device: %s\n", ftdi_get_error_string(ftdi));
+				return -1; // Failed to open the device
+			}
+			return 0; // Successfully opened the device
+		}
+		curdev = curdev->next;
+		i++;
+	}
+
+	// If we reach here, the selected index was out of range
+	fprintf(stderr, "Invalid device index selected.\n");
+	return -1; // Invalid device index
+}
+
+// Function to read and print EEPROM content
+void read_and_print_eeprom(struct ftdi_context *ftdi)
+{
+	unsigned char eeprom_buf[512]; // Adjust size if needed
+	int ret;
+
+	// Read EEPROM data
+	ret = ftdi_read_eeprom(ftdi, eeprom_buf);
+	if (ret)
+	{
+		fprintf(stderr, "Failed to read EEPROM: %s\n", ftdi_get_error_string(ftdi));
+		return;
+	}
+
+	// Print EEPROM data
+	printf("EEPROM Content:\n");
+	for (int i = 0; i < 512; i++)
+	{
+		printf("%02X ", eeprom_buf[i]);
+		if ((i + 1) % 16 == 0)
+			printf("\n");
+	}
+	printf("\n");
+}
+
+int main(int argc, char *argv[])
+{
+	struct ftdi_device_list *devlist;
+	int ret, i = 0;
+	char manufacturer[128], description[128], serial[128];
 	const char *slash;
-	unsigned char old[256] = {0,}, new[256] = {0,};
+	unsigned char old[256] = {
+			0,
+	},
+								new[256] = {
+										0,
+								};
 	uint16_t new_crc;
 	struct eeprom_fields ee;
 	uint32_t len = 128;
@@ -740,76 +831,126 @@ int main (int argc, char *argv[])
 		myname = slash + 1;
 
 	printf("\n%s: version %s, by Mark Lord.\n", myname, MYVERSION);
-	if (argc < 2) {
+	if (argc < 2)
+	{
 		show_help(stdout);
 		exit(0);
 	}
 
-	ftdi_init(&ftdi);
 	atexit(&do_deinit);
 
 	memset(&ee, 0, sizeof(ee));
-	ee.old_vid = 0x0403;;	/* default; override with --old_vid arg */
-	ee.old_pid = 0x6001;	/* default; override with --old_pid arg */
-	process_args(argc, argv, &ee);	/* handle --help and --old-* args */
+	ee.old_vid = 0x0403;
+	;															 /* default; override with --old_vid arg */
+	ee.old_pid = 0x6001;					 /* default; override with --old_pid arg */
+	process_args(argc, argv, &ee); /* handle --help and --old-* args */
 
-	if (ftdi_usb_open_desc(&ftdi, ee.old_vid, ee.old_pid, NULL, ee.old_serno)) {
-		fprintf(stderr, "ftdi_usb_open() failed for %04x:%04x:%s %s\n",
-			ee.old_vid, ee.old_pid, ee.old_serno ? ee.old_serno : "", ftdi_get_error_string(&ftdi));
-		exit(ENODEV);
+	// Initialize context
+	if (ftdi_init(&ftdi) < 0)
+	{
+		fprintf(stderr, "Failed to initialize ftdi context\n");
+		return -1;
 	}
-	atexit(&do_close);
+
+	// Find all FTDI devices
+	ret = ftdi_usb_find_all(&ftdi, &devlist, 0x0403, 0x6001);
+	if (ret < 0)
+	{
+		fprintf(stderr, "ftdi_usb_find_all failed: %d\n", ret);
+		ftdi_deinit(&ftdi);
+		return -1;
+	}
+
+	// List devices
+	struct ftdi_device_list *curdev = devlist;
+	while (curdev != NULL)
+	{
+		if (ftdi_usb_get_strings(&ftdi, curdev->dev, manufacturer, sizeof(manufacturer), description, sizeof(description), serial, sizeof(serial)) == 0)
+		{
+			printf("[%d] %s - %s (S/N: %s)\n", i++, manufacturer, description, serial);
+		}
+		curdev = curdev->next;
+	}
+
+	// Ask user to select a device
+	printf("Select the device index to program: ");
+	int index;
+	if(scanf("%d", &index)){};
+
+	// Assume function to select and open device based on index is implemented
+	if (select_and_open_device_by_index(&ftdi, devlist, index) < 0)
+	{
+		fprintf(stderr, "Failed to open selected device.\n");
+		ftdi_list_free(&devlist);
+		ftdi_deinit(&ftdi);
+		return -1;
+	}
 
 	/* First, read the original eeprom from the device */
-	(void) ee_read_and_verify(old, len);
-	if (verbose) dumpmem("existing eeprom", old, len);
+	(void)ee_read_and_verify(old, len);
+	if (verbose)
+		dumpmem("existing eeprom", old, len);
 
 	/* Save old contents to a file, if requested (--save) */
 	if (save_path)
 		save_eeprom_to_file(save_path, old, len);
 
 	/* Restore contents from a file, if requested (--restore) */
-	if (restore_path) {
+	if (restore_path)
+	{
 		restore_eeprom_from_file(restore_path, new, len, sizeof(new));
-		if (verbose) dumpmem(restore_path, new, len);
+		if (verbose)
+			dumpmem(restore_path, new, len);
 		/* Decode file contents into ee struct */
 		ee_decode(new, len, &ee);
-	} else {
+	}
+	else
+	{
 		/* Decode eeprom contents into ee struct */
 		ee_decode(old, len, &ee);
 
 		/* Reencode without any changes, to ensure we can reconstruct the original eeprom from ee */
 		new_crc = ee_encode(new, len, &ee);
-		if (memcmp(old, new, len)) {
-			if (verbose) dumpmem("reconstructed eeprom", new, len);
+		if (memcmp(old, new, len))
+		{
+			if (verbose)
+				dumpmem("reconstructed eeprom", new, len);
 			fprintf(stderr, "eeprom reconstruction self-test failed, aborting.\n");
 			exit(EINVAL);
 		}
 	}
 
 	/* process args, and dump new settings */
-	process_args(argc, argv, &ee);	/* Handle value-change args */
+	process_args(argc, argv, &ee); /* Handle value-change args */
 	ee_dump(&ee);
 
 	/* Build new eeprom image */
 	new_crc = ee_encode(new, len, &ee);
 
 	/* If different from original, then write it back to the device */
-	if (0 == memcmp(old, new, len)) {
+	if (0 == memcmp(old, new, len))
+	{
 		printf("No change from existing eeprom contents.\n");
-	} else {
-		if (verbose) dumpmem("new eeprom", new, len);
+	}
+	else
+	{
+		if (verbose)
+			dumpmem("new eeprom", new, len);
 		printf("Rewriting eeprom with new contents.\n");
-		if (ftdi_write_eeprom(&ftdi, new)) {
+		if (ftdi_write_eeprom(&ftdi, new))
+		{
 			fprintf(stderr, "ftdi_write_eeprom() failed: %s\n", ftdi_get_error_string(&ftdi));
 			exit(EIO);
 		}
 		/* Read it back again, and check for differences */
-		if (ee_read_and_verify(new, len) != new_crc) {
+		if (ee_read_and_verify(new, len) != new_crc)
+		{
 			fprintf(stderr, "Readback test failed, results may be botched\n");
 			exit(EINVAL);
 		}
-		ftdi_usb_reset(&ftdi);  /* reset the device to force it to load the new settings */
+		ftdi_usb_reset(&ftdi); /* reset the device to force it to load the new settings */
 	}
+
+	// Cleanup
 	return 0;
 }
