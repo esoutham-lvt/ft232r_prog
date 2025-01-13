@@ -172,7 +172,7 @@ static const char *arg_type_help[] = {
 		" Inverts the current value of DCD",
 		"  Inverts the current value of RI",
 		"# (filter on product name \"FT232R USB UART\" )"
-		"     <string> product name string to filter on",
+		"    <string> # (custom product_name to filter on)",
 };
 
 static const char *bool_strings[] = {

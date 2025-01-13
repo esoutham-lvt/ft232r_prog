@@ -2,7 +2,7 @@
 
 This project is a fork of [kiwitea/ft232r_prog](https://github.com/kiwitea/ft232r_prog)
 
-The `ft232r_prog` (v1.26) program provides a Linux command-line interface for reconfiguring the FT232R chip, eliminating the need for FTDI's MProg/FTProg (MS-Windows) packages. 
+The `ft232r_prog` (v1.27) program provides a Linux command-line interface for reconfiguring the FT232R chip, eliminating the need for FTDI's MProg/FTProg (MS-Windows) packages.
 
 This is copy of the code by Marc Lord, http://rtr.ca/ft232r/
 
@@ -59,9 +59,16 @@ where <arg> must be any of:
     --invert_dsr   Inverts the current value of DSR
     --invert_dcd   Inverts the current value of DCD
     --invert_ri    Inverts the current value of RI
+    --chip_filter  # (filter on default product name "FT232R USB UART")"
+    --pfilter      <string> # (custom product name to filter on)
 ```
 
 ## Examples
+Reprogram a FT232 USB chip, e.g. on custom PCB, to enable cout[2] and cout[3] as custom-IO
+```bash
+sudo ./ft232r_prog --chip_filter --cbus2 IO --cbus3 IO
+```
+
 Reprogram a FT232 Serial -> USB cable, e.g. P1 Smart Meter Cable, to invert the RXD values:
 ```bash
 sudo ./ft232r_prog --save backup.eeprom
