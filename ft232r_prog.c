@@ -171,7 +171,7 @@ static const char *arg_type_help[] = {
 		" Inverts the current value of DSR",
 		" Inverts the current value of DCD",
 		"  Inverts the current value of RI",
-		"# (filter on product name \"FT232R USB UART\" )"
+		"# (filter on product name \"FT232R USB UART\"),"
 		"    <string> # (custom product_name to filter on)",
 };
 
@@ -845,7 +845,7 @@ int main(int argc, char *argv[])
 	if (slash)
 		myname = slash + 1;
 
-	printf("\n%s: version %s, by Mark Lord.\n", myname, MYVERSION);
+	printf("\n%s: version %s, original by Mark Lord.\n", myname, MYVERSION);
 	if (argc < 2)
 	{
 		show_help(stdout);
