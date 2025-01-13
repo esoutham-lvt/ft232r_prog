@@ -1,10 +1,11 @@
-# ft232r_prog
+# [ft232r_prog](https://github.com/esoutham-lvt/ft232r_prog)
 
-This project is a fork of [kiwitea/ft232r_prog](https://github.com/kiwitea/ft232r_prog)
+This project is a fork [Shopguard/ft232r_prog](https://github.com/Shopguard/ft232r_prog)<br />
+<tb />which is a project is a fork of [kiwitea/ft232r_prog](https://github.com/kiwitea/ft232r_prog)<br />
+which is a copy of the original  [rtr.ca/ft232r](https://rtr.ca/ft232r/) by Marc Lord.
+
 
 The `ft232r_prog` (v1.27) program provides a Linux command-line interface for reconfiguring the FT232R chip, eliminating the need for FTDI's MProg/FTProg (MS-Windows) packages.
-
-This is copy of the code by Marc Lord, http://rtr.ca/ft232r/
 
 The FTDI FT232R is a USB/serial converter chip, compatible with both 3.3V and 5.0V TTL logic, but can also be used as General Purpose I/O (GPIO) device. The code hosted here is primarily in support of the latter: a simple way to control real-world stuff from a Linux box, using the CBUS GPIO capabilities of the chip.
 
@@ -24,7 +25,7 @@ make
 ```bash
 ❯ ./ft232r_prog --help
 
-ft232r_prog: version 1.26, by Mark Lord.
+ft232r_prog: version 1.27, by Mark Lord++.
 
 Usage:  ft232r_prog [<arg> <val>]..
 
