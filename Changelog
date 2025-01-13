@@ -1,3 +1,6 @@
+Version 1.27 (courtesy of Eric Southam)
+    -- added --pfilter <string> argument to filter on specific ftdi product names
+    -- added --chip_filter flag to filter on default product name "FT232R USB UART"
 Version 1.26
 	-- added device selector
 Version 1.25: (courtesy of David Pello)
