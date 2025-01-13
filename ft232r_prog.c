@@ -28,7 +28,7 @@
 #include <ftdi.h>
 #include <inttypes.h>
 
-#define MYVERSION "1.26"
+#define MYVERSION "1.27"
 
 static struct ftdi_context ftdi;
 static int verbose = 0;
@@ -101,6 +101,8 @@ enum arg_type
 	arg_invert_dsr,
 	arg_invert_dcd,
 	arg_invert_ri,
+	arg_chip_filter,
+	arg_prod_filter,
 };
 
 static const char *arg_type_strings[] = {
@@ -134,6 +136,8 @@ static const char *arg_type_strings[] = {
 		"--invert_dsr",
 		"--invert_dcd",
 		"--invert_ri",
+		"--chip_filter",
+		"--pfilter",
 		NULL};
 
 static const char *arg_type_help[] = {
@@ -167,6 +171,8 @@ static const char *arg_type_help[] = {
 		" Inverts the current value of DSR",
 		" Inverts the current value of DCD",
 		"  Inverts the current value of RI",
+		"# (filter on product name \"FT232R USB UART\" )"
+		"     <string> product name string to filter on",
 };
 
 static const char *bool_strings[] = {
@@ -205,6 +211,9 @@ struct eeprom_fields
 	const char *old_serno;
 	uint16_t new_vid;
 	uint16_t new_pid;
+	unsigned char chip_filter;			/* on/or not */
+	char* prod_filter;	/* pointer to arg, USB product name filter to use on open*/
+
 };
 
 static void dumpmem(const char *msg, void *addr, int len)
@@ -639,6 +648,9 @@ static void process_args(int argc, char *argv[], struct eeprom_fields *ee)
 		case arg_invert_ri:
 			ee->ri_inverted = !ee->ri_inverted;
 			continue;
+		case arg_chip_filter:
+			ee->chip_filter = 1;
+			continue;
 		}
 		if (i == argc)
 		{
@@ -695,6 +707,9 @@ static void process_args(int argc, char *argv[], struct eeprom_fields *ee)
 			break;
 		case arg_new_pid:
 			ee->new_pid = unsigned_val(argv[i++], 0xffff);
+                break;
+            case arg_prod_filter:
+                ee->prod_filter = argv[i++];
 			break;
 		default:
 			fprintf(stderr, "bad args\n");
@@ -840,8 +855,7 @@ int main(int argc, char *argv[])
 	atexit(&do_deinit);
 
 	memset(&ee, 0, sizeof(ee));
-	ee.old_vid = 0x0403;
-	;															 /* default; override with --old_vid arg */
+	ee.old_vid = 0x0403;					 /* default; override with --old_vid arg */
 	ee.old_pid = 0x6001;					 /* default; override with --old_pid arg */
 	process_args(argc, argv, &ee); /* handle --help and --old-* args */
 
@@ -852,38 +866,52 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	// Find all FTDI devices
-	ret = ftdi_usb_find_all(&ftdi, &devlist, 0x0403, 0x6001);
-	if (ret < 0)
-	{
-		fprintf(stderr, "ftdi_usb_find_all failed: %d\n", ret);
-		ftdi_deinit(&ftdi);
-		return -1;
-	}
-
-	// List devices
-	struct ftdi_device_list *curdev = devlist;
-	while (curdev != NULL)
-	{
-		if (ftdi_usb_get_strings(&ftdi, curdev->dev, manufacturer, sizeof(manufacturer), description, sizeof(description), serial, sizeof(serial)) == 0)
+	if (ee.chip_filter == 0 && ee.prod_filter == NULL) {
+		// Find all FTDI devices
+		ret = ftdi_usb_find_all(&ftdi, &devlist, 0x0403, 0x6001);
+		if (ret < 0)
 		{
-			printf("[%d] %s - %s (S/N: %s)\n", i++, manufacturer, description, serial);
+			fprintf(stderr, "ftdi_usb_find_all failed: %d\n", ret);
+			ftdi_deinit(&ftdi);
+			return -1;
 		}
-		curdev = curdev->next;
-	}
 
-	// Ask user to select a device
-	printf("Select the device index to program: ");
-	int index;
-	if(scanf("%d", &index)){};
+		// List devices
+		struct ftdi_device_list *curdev = devlist;
+		while (curdev != NULL)
+		{
+			if (ftdi_usb_get_strings(&ftdi, curdev->dev, manufacturer, sizeof(manufacturer), description, sizeof(description), serial, sizeof(serial)) == 0)
+			{
+				printf("[%d] %s - %s (S/N: %s)\n", i++, manufacturer, description, serial);
+			}
+			curdev = curdev->next;
+		}
 
-	// Assume function to select and open device based on index is implemented
-	if (select_and_open_device_by_index(&ftdi, devlist, index) < 0)
-	{
-		fprintf(stderr, "Failed to open selected device.\n");
-		ftdi_list_free(&devlist);
-		ftdi_deinit(&ftdi);
-		return -1;
+		// Ask user to select a device
+		printf("Select the device index to program: ");
+		int index;
+		if(scanf("%d", &index)){};
+
+		// Assume function to select and open device based on index is implemented
+		if (select_and_open_device_by_index(&ftdi, devlist, index) < 0)
+		{
+			fprintf(stderr, "Failed to open selected device.\n");
+			ftdi_list_free(&devlist);
+			ftdi_deinit(&ftdi);
+			return -1;
+		}
+	} else {
+		if (ee.chip_filter != 0) {
+			//assign default chip uart product namechip
+			ee.prod_filter = "FT232R USB UART";
+		}
+		printf("\tuse product filter: %s\n", ee.prod_filter);
+
+		if (ftdi_usb_open_desc(&ftdi, ee.old_vid, ee.old_pid, ee.prod_filter, ee.old_serno)) {
+			fprintf(stderr, "ftdi_usb_open() failed for %04x:%04x:%s\"%s\" --> err: %s\n",
+				ee.old_vid, ee.old_pid, ee.old_serno ? ee.old_serno : "", ee.prod_filter, ftdi_get_error_string(&ftdi));
+		exit(ENODEV);
+		}
 	}
 
 	/* First, read the original eeprom from the device */
