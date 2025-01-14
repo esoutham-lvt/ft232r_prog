@@ -1,8 +1,8 @@
 # [ft232r_prog](https://github.com/esoutham-lvt/ft232r_prog)
 
-This project is a fork [Shopguard/ft232r_prog](https://github.com/Shopguard/ft232r_prog)<br />
-<tb />which is a project is a fork of [kiwitea/ft232r_prog](https://github.com/kiwitea/ft232r_prog)<br />
-which is a copy of the original  [rtr.ca/ft232r](https://rtr.ca/ft232r/) by Marc Lord.
+This project is a fork of [Shopguard/ft232r_prog](https://github.com/Shopguard/ft232r_prog)<br />
+<tb />which project is a fork of [kiwitea/ft232r_prog](https://github.com/kiwitea/ft232r_prog)<br />
+which is a copy of [rtr.ca/ft232r](https://rtr.ca/ft232r/) by Marc Lord.
 
 
 The `ft232r_prog` (v1.27) program provides a Linux command-line interface for reconfiguring the FT232R chip, eliminating the need for FTDI's MProg/FTProg (MS-Windows) packages.
@@ -27,7 +27,7 @@ make
 
 ft232r_prog: version 1.27, by Mark Lord++.
 
-Usage:  ft232r_prog [<arg> <val>]..
+Usage:  ft232r_prog [<arg> <val>]...
 
 where <arg> must be any of:
     --help     # (show this help text)
